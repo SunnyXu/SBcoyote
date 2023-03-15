@@ -1,6 +1,6 @@
 """
 Export the network on canvas to an SBML string as save it as a file.
-Version 1.0.4: Author: Jin Xu (2023)
+Version 1.0.5: Author: Jin Xu (2023)
 """
 
 
@@ -20,7 +20,7 @@ class ExportSBML(WindowedPlugin):
     metadata = PluginMetadata(
         name='ExportSBML',
         author='Jin Xu',
-        version='1.0.4',
+        version='1.0.5',
         short_desc='Export SBML.',
         long_desc='Export the SBML String from the network on canvas and save it to a file.',
         category=PluginCategory.ANALYSIS
@@ -409,8 +409,8 @@ class ExportSBML(WindowedPlugin):
             #
             layout = mplugin.createLayout()
             layout.setId("COYOTO_layout")
-            layout_width = 9900
-            layout_height = 6100
+            layout_width = 10000 - 20
+            layout_height = 6200 - 20
             layout.setDimensions(Dimensions(layoutns, layout_width, layout_height))
             # random network (40+800x, 40+800y)
 
@@ -1124,7 +1124,7 @@ class ExportSBML(WindowedPlugin):
                     for j in range(rct_num):
                         specsRefG_id = "SpecRefG_" + rxn_id + "_rct" + str(j)
                         style = rInfo.createStyle("specRefGlyphStyle" + rxn_id + "_rct" + str(j))
-                        style.getGroup().setEndHead('_line_ending_default_NONE_')
+                        style.getGroup().setEndHead('_line_ending_default_NONE_' + rxn_id)
                         style.getGroup().setStroke("lineEnding_border_color" + "_" + lineEnding_id)
                         style.getGroup().setFill("lineEnding_fill_color" + "_" + lineEnding_id)
                         style.getGroup().setStrokeWidth(reaction_line_thickness)
