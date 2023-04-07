@@ -30,7 +30,7 @@ class IMPORTSBML(WindowedPlugin):
         version='1.1.6',
         short_desc='Import SBML.',
         long_desc='Import an SBML String from a file and visualize it as a network on canvas.',
-        category=PluginCategory.ANALYSIS
+        category=PluginCategory.MODELS
     )
 
     def create_window(self, dialog):
@@ -139,6 +139,8 @@ class IMPORTSBML(WindowedPlugin):
             comp_dimension_list = []
             comp_position_list = []
             spec_id_list = []
+            spec_name_list = []
+            spec_SBO_list = []
             specGlyph_id_list = []
             spec_specGlyph_id_list = []
             spec_dimension_list = []
@@ -378,47 +380,82 @@ class IMPORTSBML(WindowedPlugin):
                                         #line starts from center
                                         spec_lineend_pos = line_end_pt
                                         modifier_lineend_pos = line_start_pt
-                                        try: #bezier
-                                            if num_curve == 1:
+                                        
+                                        if num_curve == 1:
+                                            try: #bezier
                                                 center_handle_candidate = [segment.getBasePoint1().getXOffset(), 
                                                                 segment.getBasePoint1().getYOffset()]                                
                                                 spec_handle = [segment.getBasePoint2().getXOffset(),
-                                                            segment.getBasePoint2().getYOffset()]
-                                            else:        
+                                                            segment.getBasePoint2().getYOffset()] 
+                                            except: #straight
+                                                spec_handle = [.5*(center_pt[0]+line_end_pt[0]),
+                                                .5*(center_pt[1]+line_end_pt[1])]
+                                                center_handle_candidate = center_pt
+                                                #spec_handle = center_pt         
+                                        else:  
+                                            try: #bezier
+                                                center_handle_candidate = []  
+                                                flag_bezier = 0  
                                                 for segment in curve.getListOfCurveSegments():
-                                                    if segment.getTypeCode() == 102: 
+                                                    if segment.getTypeCode() == 102:
+                                                        flag_bezier = 1
+                                                for segment in curve.getListOfCurveSegments():
+                                                    if flag_bezier == 1: 
                                                         #102 CubicBezier #107LineSegment
-                                                        center_handle_candidate = center_pt                              
-                                                        spec_handle = [segment.getBasePoint2().getXOffset(),
-                                                                segment.getBasePoint2().getYOffset()]
-                                        except: #straight
-                                            spec_handle = [.5*(center_pt[0]+line_end_pt[0]),
-                                            .5*(center_pt[1]+line_end_pt[1])]
-                                            center_handle_candidate = center_pt
-                                            #spec_handle = center_pt
+                                                        if segment.getTypeCode() == 102:
+                                                            spec_handle = [segment.getBasePoint1().getXOffset(), 
+                                                                        segment.getBasePoint1().getYOffset()]                                
+                                                            center_handle_candidate = center_pt
+                                                    else:
+                                                        spec_handle = [.5*(center_pt[0]+line_start_pt[0]),
+                                                        .5*(center_pt[1]+line_start_pt[1])]
+                                                        center_handle_candidate = center_pt
+                                                        #spec_handle = center_pt
+                                            except: #straight
+                                                spec_handle = [.5*(center_pt[0]+line_end_pt[0]),
+                                                .5*(center_pt[1]+line_end_pt[1])]
+                                                center_handle_candidate = center_pt
+                                                #spec_handle = center_pt 
                                     else:
                                         #line starts from species
                                         spec_lineend_pos = line_start_pt
                                         modifier_lineend_pos = line_end_pt
-                                        try: #bezier
-                                            if num_curve == 1:
+                                        
+                                        if num_curve == 1:
+                                            try: #bezier
                                                 spec_handle = [segment.getBasePoint1().getXOffset(), 
                                                                     segment.getBasePoint1().getYOffset()]                                
                                                 center_handle_candidate = [segment.getBasePoint2().getXOffset(),
                                                                 segment.getBasePoint2().getYOffset()]
-                                            else:
+                                            except: #straight
+                                                spec_handle = [.5*(center_pt[0]+line_start_pt[0]),
+                                                .5*(center_pt[1]+line_start_pt[1])]
+                                                center_handle_candidate = center_pt
+                                                #spec_handle = center_pt
+                                        else:
+                                            try: #bezier
+                                                center_handle_candidate = [] 
+                                                flag_bezier = 0  
                                                 for segment in curve.getListOfCurveSegments():
-                                                    if segment.getTypeCode() == 102: 
+                                                    if segment.getTypeCode() == 102:
+                                                        flag_bezier = 1
+                                                for segment in curve.getListOfCurveSegments():
+                                                    if flag_bezier == 1: 
                                                         #102 CubicBezier #107LineSegment
-                                                        spec_handle = [segment.getBasePoint1().getXOffset(), 
-                                                                    segment.getBasePoint1().getYOffset()]                                
+                                                        if segment.getTypeCode() == 102:
+                                                            spec_handle = [segment.getBasePoint1().getXOffset(), 
+                                                                        segment.getBasePoint1().getYOffset()]                                
+                                                            center_handle_candidate = center_pt
+                                                    else:
+                                                        spec_handle = [.5*(center_pt[0]+line_start_pt[0]),
+                                                        .5*(center_pt[1]+line_start_pt[1])]
                                                         center_handle_candidate = center_pt
-                                        except: #straight
-                                            spec_handle = [.5*(center_pt[0]+line_start_pt[0]),
-                                            .5*(center_pt[1]+line_start_pt[1])]
-                                            # center_handle_candidate = center_pt
-                                            center_handle_candidate = center_pt
-                                            #spec_handle = center_pt
+                                                        #spec_handle = center_pt
+                                            except: #straight
+                                                spec_handle = [.5*(center_pt[0]+line_start_pt[0]),
+                                                .5*(center_pt[1]+line_start_pt[1])]
+                                                center_handle_candidate = center_pt
+                                                #spec_handle = center_pt
 
                                 except:
                                     center_handle_candidate = []
@@ -449,9 +486,10 @@ class IMPORTSBML(WindowedPlugin):
 
 
                                 spec_id = specGlyph.getSpeciesId()
-                                
                                 spec = model_layout.getSpecies(spec_id)
                                 spec_name = spec.getName()
+                                spec_SBO = spec.getSBOTermID()
+                                #print(spec_SBO)
                                 
                                 try:
                                     concentration = spec.getInitialConcentration()
@@ -498,6 +536,8 @@ class IMPORTSBML(WindowedPlugin):
 
                                 if specGlyph_id not in specGlyph_id_list:
                                     spec_id_list.append(spec_id)
+                                    spec_name_list.append(spec_name)
+                                    spec_SBO_list.append(spec_SBO)
                                     specGlyph_id_list.append(specGlyph_id)
                                     spec_specGlyph_id_list.append([spec_id,specGlyph_id])
                                     spec_dimension_list.append([width,height])
@@ -542,7 +582,12 @@ class IMPORTSBML(WindowedPlugin):
                             if specGlyph_id not in specGlyph_id_list:
                                 specGlyph_id_list.append(specGlyph_id)
                                 spec_id = specGlyph.getSpeciesId()
+                                spec = model_layout.getSpecies(spec_id)
+                                spec_name = spec.getName()
+                                spec_SBO = spec.getSBOTermID()
                                 spec_id_list.append(spec_id)
+                                spec_name_list.append(spec_name)
+                                spec_SBO_list.append(spec_SBO)
                                 spec_specGlyph_id_list.append([spec_id,specGlyph_id])
                                 boundingbox = specGlyph.getBoundingBox()
                                 height = boundingbox.getHeight()
@@ -1230,6 +1275,8 @@ class IMPORTSBML(WindowedPlugin):
                     # orphan nodes have been considered, so numSpec_in_reaction should equals to numSpecGlyphs
                     for i in range (numSpec_in_reaction):
                         temp_id = spec_specGlyph_id_list[i][0]
+                        temp_name = spec_name_list[i]
+                        temp_SBO = spec_SBO_list[i]
                         temp_concentration = spec_concentration_list[i]
                         tempGlyph_id = spec_specGlyph_id_list[i][1]
                         dimension = spec_dimension_list[i]
@@ -1299,7 +1346,8 @@ class IMPORTSBML(WindowedPlugin):
                                     size=Vec2(dimension[0],dimension[1]), position=Vec2(position[0],position[1]),
                                     fill_color=api.Color(spec_fill_color[0],spec_fill_color[1],spec_fill_color[2],spec_fill_color[3]),
                                     border_color=api.Color(spec_border_color[0],spec_border_color[1],spec_border_color[2],spec_border_color[3]),
-                                    border_width=spec_border_width, shape_index=shapeIdx, concentration = temp_concentration)
+                                    border_width=spec_border_width, shape_index=shapeIdx, concentration = temp_concentration,
+                                    node_name = temp_name, node_SBO = temp_SBO)
                                     
                                     api.set_node_shape_property(net_index, nodeIdx_temp, -1, "alignment", text_alignment)
                                     api.set_node_shape_property(net_index, nodeIdx_temp, -1, "position", text_position)
@@ -1384,7 +1432,8 @@ class IMPORTSBML(WindowedPlugin):
                                     size=Vec2(dimension[0],dimension[1]), position=Vec2(position[0],position[1]),
                                     fill_color=api.Color(spec_fill_color[0],spec_fill_color[1],spec_fill_color[2],spec_fill_color[3]),
                                     border_color=api.Color(spec_border_color[0],spec_border_color[1],spec_border_color[2],spec_border_color[3]),
-                                    border_width=spec_border_width, shape_index=shapeIdx, concentration = temp_concentration)
+                                    border_width=spec_border_width, shape_index=shapeIdx, concentration = temp_concentration,
+                                    node_name = temp_name, node_SBO = temp_SBO)
                                                                             
                                     api.set_node_shape_property(net_index, nodeIdx_temp, -1, "alignment", text_alignment)
                                     api.set_node_shape_property(net_index, nodeIdx_temp, -1, "position", text_position)
